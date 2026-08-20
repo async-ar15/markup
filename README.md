@@ -6,9 +6,19 @@ Local-first MCP server + browser viewer. Distributed as a clone-and-run repo —
 
 ## Why this exists
 
-[Thariq's May 2026 article](https://x.com/trq212/status/2052809885763747935) makes the case that **HTML > markdown as agent output**. Every example in that article ends with the same manual ritual: click "Copy as prompt", switch windows, paste back, run. **markup collapses that ritual into a single tool call** — the user's annotation flows back to the agent automatically.
+Agents are getting really good at generating rich HTML output — specs, plans,
+dashboards, interactive tools. But there was always a gap: the agent renders
+something, you look at it, you have thoughts — and then what? You copy text,
+switch windows, paste it back, and manually describe what you saw. Every time.
 
-It works on _any_ HTML — specs, plans, diffs, design playgrounds — and overlays a universal scroll-anchored comment layer on top.
+**markup closes that loop.** It gives any HTML artifact a built-in annotation
+layer. You scroll, you comment inline as you read, and when you're done — one
+keypress packages everything: your words, the exact regions of the page you
+were looking at, screenshots of each. The agent gets it all back automatically.
+No copy-paste. No context switching. No friction.
+
+It works on _any_ HTML — specs, plans, diffs, design playgrounds — without
+touching the artifact itself.
 
 ## Quickstart
 
