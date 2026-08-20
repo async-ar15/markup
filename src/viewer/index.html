@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>markup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&family=Inter+Tight:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- html2canvas-pro: maintained fork that supports color-mix(), color(), oklch(), and other modern CSS. -->
+<script src="https://cdn.jsdelivr.net/npm/html2canvas-pro@2.0.2/dist/html2canvas-pro.min.js"></script>
+<style>
+  :root {
+    --font-display: 'Instrument Serif', Georgia, serif;
+    --font-body: 'Inter Tight', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+
+    --bg: #f7f3eb;
+    --chrome: #1c2a3a;
+    --chrome-soft: rgba(28, 42, 58, 0.04);
+    --surface: #fdfbf6;
+    --border: rgba(28, 42, 58, 0.12);
+    --border-bright: rgba(28, 42, 58, 0.22);
+    --text: #1c2a3a;
+    --text-dim: #6a7689;
+    --accent: #b8923a;
+    --accent-bright: #9c7a26;
+    --accent-dim: rgba(184, 146, 58, 0.16);
+    --sage: #5b7a3a;
+    --rose: #a8324a;
+    --amber: #c47a1a;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1a2c;
+      --chrome: #e4cf9c;
+      --chrome-soft: rgba(228, 207, 156, 0.06);
+      --surface: #122238;
+      --border: rgba(228, 207, 156, 0.12);
+      --border-bright: rgba(228, 207, 156, 0.22);
+      --text: #e4cf9c;
+      --text-dim: #93a0b3;
+      --accent: #d4a73a;
+      --accent-bright: #e4cf9c;
+      --accent-dim: rgba(212, 167, 58, 0.20);
+      --sage: #9fc35a;
+      --rose: #d96384;
+      --amber: #e8a958;
+    }
+  }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body { height: 100%; overflow: hidden; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14px;
+    line-height: 1.5;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ==================== TOP BAR ==================== */
+  .topbar {
+    height: 42px;
+    flex: 0 0 auto;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 18px;
+    gap: 18px;
+    z-index: 10;
+  }
+  .topbar__brand {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .topbar__brand::before {
+    content: '';
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .topbar__title {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 17px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .topbar__status {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .status-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--text-dim);
+    transition: background 0.2s ease;
+  }
+  .status-dot.is-connected { background: var(--sage); }
+  .status-dot.is-pending { background: var(--amber); }
+  .status-dot.is-error { background: var(--rose); }
+
+  /* ==================== MAIN ==================== */
+  .main {
+    flex: 1 1 auto;
+    position: relative;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  .empty-state {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 32px;
+    background: var(--bg);
+    pointer-events: none;
+  }
+  .empty-state__label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2.5px;
+    color: var(--accent);
+    margin-bottom: 18px;
+  }
+  .empty-state__title {
+    font-family: var(--font-display);
+    font-size: 38px;
+    line-height: 1.1;
+    color: var(--text);
+    margin-bottom: 14px;
+  }
+  .empty-state__title em { font-style: italic; color: var(--accent); }
+  .empty-state__deck {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 17px;
+    color: var(--text-dim);
+    max-width: 440px;
+  }
+  .empty-state.is-hidden { display: none; }
+
+  /* ==================== IFRAME + PIN OVERLAY ==================== */
+  .stage {
+    position: absolute;
+    inset: 0;
+    display: none;
+  }
+  .stage.is-active { display: block; }
+
+  .artifact-frame {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: white;
+    display: block;
+  }
+
+  .pin-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .pin {
+    position: absolute;
+    right: 12px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: white;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+    pointer-events: auto;
+    cursor: pointer;
+    transform: translateY(-50%);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    border: 2px solid var(--surface);
+  }
+  .pin:hover { transform: translateY(-50%) scale(1.1); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.22); }
+  .pin__tooltip {
+    position: absolute;
+    right: 34px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--chrome);
+    color: var(--bg);
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    white-space: nowrap;
+    max-width: 280px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+  }
+  .pin:hover .pin__tooltip { opacity: 0.92; }
+
+  /* ==================== COMPOSER ==================== */
+  .composer {
+    flex: 0 0 auto;
+    background: var(--surface);
+    border-top: 1px solid var(--border-bright);
+    padding: 12px 16px;
+    display: flex;
+    align-items: flex-end;
+    gap: 14px;
+    z-index: 10;
+    box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.06);
+  }
+  .composer__count {
+    flex: 0 0 auto;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    padding-bottom: 9px;
+    min-width: 110px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .composer__count strong {
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0;
+  }
+  .composer__textarea {
+    flex: 1 1 auto;
+    min-width: 0;
+    resize: none;
+    border: 1px solid var(--border-bright);
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14px;
+    line-height: 1.5;
+    padding: 8px 12px;
+    border-radius: 8px;
+    outline: none;
+    max-height: 140px;
+    min-height: 36px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .composer__textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+  }
+  .composer__textarea::placeholder {
+    color: var(--text-dim);
+    font-style: italic;
+  }
+  .composer__hint {
+    flex: 0 0 auto;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    padding-bottom: 9px;
+    text-align: right;
+    line-height: 1.4;
+    min-width: 150px;
+  }
+  .composer__hint kbd {
+    background: var(--chrome-soft);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 1px 5px;
+    margin: 0 2px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text);
+  }
+  .composer__hint--submit { color: var(--accent); font-weight: 600; }
+
+  /* ==================== SUBMITTING OVERLAY ==================== */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+  .overlay.is-active { display: flex; }
+  .overlay__card {
+    background: var(--surface);
+    border: 1px solid var(--border-bright);
+    border-radius: 12px;
+    padding: 28px 40px;
+    box-shadow: 0 8px 36px rgba(0, 0, 0, 0.15);
+    text-align: center;
+    max-width: 420px;
+  }
+  .overlay__label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+  .overlay__title {
+    font-family: var(--font-display);
+    font-size: 26px;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .overlay__progress {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .overlay__progress strong { color: var(--text); }
+
+  /* ==================== TOAST ==================== */
+  .toast {
+    position: fixed;
+    bottom: 86px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--chrome);
+    color: var(--bg);
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 200;
+  }
+  .toast.is-visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  .toast--error { background: var(--rose); color: white; }
+  .toast--success { background: var(--sage); color: white; }
+
+  /* Reduce motion */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="topbar__brand">markup</div>
+    <div class="topbar__title" id="title">no artifact</div>
+    <div class="topbar__status">
+      <span class="status-dot" id="status-dot"></span>
+      <span id="status-text">connecting…</span>
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="empty-state" id="empty">
+      <div class="empty-state__label">awaiting artifact</div>
+      <h1 class="empty-state__title">Waiting for an <em>HTML</em> to render.</h1>
+      <p class="empty-state__deck">
+        The viewer is connected. The next time an agent calls
+        <em>present_and_await_feedback</em>, the artifact will appear here.
+      </p>
+    </div>
+    <div class="stage" id="stage">
+      <iframe class="artifact-frame" id="frame" title="artifact"></iframe>
+      <div class="pin-layer" id="pins"></div>
+    </div>
+  </main>
+
+  <form class="composer" id="composer">
+    <div class="composer__count">
+      <span><strong id="queue-count">0</strong> queued</span>
+    </div>
+    <textarea
+      id="textarea"
+      class="composer__textarea"
+      rows="1"
+      placeholder="Type a comment about what you're viewing — Enter to queue, ⌘+Enter to submit all"
+      autofocus></textarea>
+    <div class="composer__hint">
+      <div><kbd>Enter</kbd> queue</div>
+      <div class="composer__hint--submit"><kbd>⌘ Enter</kbd> submit all</div>
+    </div>
+  </form>
+
+  <div class="overlay" id="overlay">
+    <div class="overlay__card">
+      <div class="overlay__label">capturing feedback</div>
+      <h2 class="overlay__title">Sending your comments back…</h2>
+      <p class="overlay__progress" id="overlay-progress">preparing</p>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+(function () {
+  // ============================================================
+  // CONFIG
+  // ============================================================
+  const MAX_BUCKET_HEIGHT = 2500;
+  const OVERLAP_THRESHOLD = 0.30;
+  const WS_RETRY_BASE = 500;
+  const WS_RETRY_MAX = 10000;
+
+  // ============================================================
+  // STATE
+  // ============================================================
+  /** @type {{id:string,title?:string}|null} */
+  let currentArtifact = null;
+  /** @type {Array<{id:string,text:string,scrollY:number,viewportH:number,timestamp:number}>} */
+  const queue = [];
+  let scrollAnchor = 0;
+  let viewportH = 0;
+  let docHeight = 0;
+  let wsRetryAttempt = 0;
+  let isSubmitting = false;
+
+  // ============================================================
+  // DOM
+  // ============================================================
+  const $ = (sel) => /** @type {any} */ (document.querySelector(sel));
+  const titleEl = $('#title');
+  const statusDot = $('#status-dot');
+  const statusText = $('#status-text');
+  const emptyEl = $('#empty');
+  const stageEl = $('#stage');
+  const frameEl = /** @type {HTMLIFrameElement} */ ($('#frame'));
+  const pinsEl = $('#pins');
+  const formEl = $('#composer');
+  const textareaEl = /** @type {HTMLTextAreaElement} */ ($('#textarea'));
+  const queueCountEl = $('#queue-count');
+  const overlayEl = $('#overlay');
+  const overlayProgressEl = $('#overlay-progress');
+  const toastEl = $('#toast');
+
+  // ============================================================
+  // STATUS
+  // ============================================================
+  function setStatus(state, label) {
+    statusDot.classList.remove('is-connected', 'is-pending', 'is-error');
+    if (state) statusDot.classList.add(state);
+    statusText.textContent = label;
+  }
+
+  function showToast(msg, kind) {
+    toastEl.textContent = msg;
+    toastEl.className = 'toast is-visible' + (kind ? ' toast--' + kind : '');
+    setTimeout(() => { toastEl.classList.remove('is-visible'); }, 2200);
+  }
+
+  // ============================================================
+  // ARTIFACT RENDERING
+  // ============================================================
+  function showArtifact(msg) {
+    currentArtifact = msg;
+    queue.length = 0;
+    updateQueueCount();
+    renderPins();
+    titleEl.textContent = msg.title || 'artifact ' + msg.id.slice(0, 8);
+    emptyEl.classList.add('is-hidden');
+    stageEl.classList.add('is-active');
+    setStatus('is-pending', 'awaiting your feedback');
+
+    // Load the artifact via the /artifacts/:id route so it's same-origin
+    // and html2canvas can access the iframe DOM.
+    frameEl.src = '/artifacts/' + encodeURIComponent(msg.id);
+    frameEl.addEventListener('load', onFrameLoaded, { once: true });
+    textareaEl.focus();
+  }
+
+  function onFrameLoaded() {
+    try {
+      const win = frameEl.contentWindow;
+      const doc = frameEl.contentDocument;
+      if (!win || !doc) return;
+      viewportH = win.innerHeight;
+      docHeight = Math.max(
+        doc.documentElement.scrollHeight,
+        doc.body ? doc.body.scrollHeight : 0
+      );
+      scrollAnchor = win.scrollY || 0;
+
+      win.addEventListener('scroll', () => {
+        scrollAnchor = win.scrollY;
+        renderPins();
+      }, { passive: true });
+
+      win.addEventListener('resize', () => {
+        viewportH = win.innerHeight;
+        renderPins();
+      }, { passive: true });
+
+      renderPins();
+    } catch (e) {
+      console.error('[viewer] frame load handler error', e);
+    }
+  }
+
+  // ============================================================
+  // PIN OVERLAY
+  // ============================================================
+  function renderPins() {
+    pinsEl.innerHTML = '';
+    if (!currentArtifact) return;
+    const rect = frameEl.getBoundingClientRect();
+    const mainRect = pinsEl.parentElement.getBoundingClientRect();
+
+    queue.forEach((c, idx) => {
+      const yInFrame = c.scrollY - scrollAnchor;
+      if (yInFrame < 0 || yInFrame > rect.height) return;
+      const pin = document.createElement('div');
+      pin.className = 'pin';
+      pin.style.top = (rect.top - mainRect.top + yInFrame) + 'px';
+      pin.textContent = String(idx + 1);
+      pin.title = c.text;
+
+      const tip = document.createElement('div');
+      tip.className = 'pin__tooltip';
+      tip.textContent = c.text;
+      pin.appendChild(tip);
+
+      pin.addEventListener('click', () => {
+        try {
+          frameEl.contentWindow.scrollTo({ top: c.scrollY, behavior: 'smooth' });
+        } catch {}
+      });
+      pinsEl.appendChild(pin);
+    });
+  }
+
+  function updateQueueCount() {
+    queueCountEl.textContent = String(queue.length);
+  }
+
+  // ============================================================
+  // COMPOSER
+  // ============================================================
+  function queueComment(text) {
+    if (!currentArtifact) {
+      showToast('no artifact loaded', 'error');
+      return;
+    }
+    const c = {
+      id: cryptoRandomId(),
+      text,
+      scrollY: scrollAnchor,
+      viewportH: viewportH || 800,
+      timestamp: Date.now(),
+    };
+    queue.push(c);
+    updateQueueCount();
+    renderPins();
+  }
+
+  function cryptoRandomId() {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+    return 'c' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+  }
+
+  textareaEl.addEventListener('input', () => {
+    textareaEl.style.height = 'auto';
+    textareaEl.style.height = Math.min(140, textareaEl.scrollHeight) + 'px';
+  });
+
+  textareaEl.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    if (e.shiftKey) return; // shift+enter inserts newline
+
+    e.preventDefault();
+    const text = textareaEl.value.trim();
+
+    if (e.metaKey || e.ctrlKey) {
+      // submit ALL queued comments (queue may already include the current text if Enter was pressed first)
+      if (text) {
+        queueComment(text);
+        textareaEl.value = '';
+        textareaEl.style.height = 'auto';
+      }
+      submitBundle();
+      return;
+    }
+
+    if (!text) return;
+    queueComment(text);
+    textareaEl.value = '';
+    textareaEl.style.height = 'auto';
+  });
+
+  formEl.addEventListener('submit', (e) => e.preventDefault());
+
+  // ============================================================
+  // BUCKETING
+  // ============================================================
+  function rangeOverlap(a, b) {
+    const inter = Math.max(0, Math.min(a[1], b[1]) - Math.max(a[0], b[0]));
+    const shorter = Math.min(a[1] - a[0], b[1] - b[0]);
+    return shorter > 0 ? inter / shorter : 0;
+  }
+
+  function clusterByProximity(comments) {
+    const sorted = comments.slice().sort((a, b) => a.timestamp - b.timestamp);
+    /** @type {Array<{comments:any[],range:[number,number]}>} */
+    const buckets = [];
+    for (const c of sorted) {
+      const r = [c.scrollY, c.scrollY + c.viewportH];
+      let hit = null;
+      for (const b of buckets) {
+        if (rangeOverlap(r, b.range) > OVERLAP_THRESHOLD) { hit = b; break; }
+      }
+      if (hit) {
+        hit.comments.push(c);
+        hit.range = [Math.min(hit.range[0], r[0]), Math.max(hit.range[1], r[1])];
+      } else {
+        buckets.push({ comments: [c], range: [r[0], r[1]] });
+      }
+    }
+    // Cap height: center on centroid if over the limit.
+    return buckets.map((b) => {
+      const h = b.range[1] - b.range[0];
+      if (h <= MAX_BUCKET_HEIGHT) return b;
+      const centroid =
+        b.comments.reduce((sum, c) => sum + c.scrollY + c.viewportH / 2, 0) /
+        b.comments.length;
+      const half = MAX_BUCKET_HEIGHT / 2;
+      const start = Math.max(0, centroid - half);
+      const end = Math.min(docHeight || (start + MAX_BUCKET_HEIGHT), start + MAX_BUCKET_HEIGHT);
+      return { comments: b.comments, range: [Math.floor(start), Math.floor(end)] };
+    });
+  }
+
+  // ============================================================
+  // SCREENSHOT CAPTURE
+  // ============================================================
+  function nextFrame() {
+    return new Promise((res) => requestAnimationFrame(() => requestAnimationFrame(() => res(undefined))));
+  }
+
+  // Tiny 1x1 transparent PNG used as a placeholder when html2canvas fails.
+  const PLACEHOLDER_PNG =
+    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+
+  async function logToServer(level, message, stack, context) {
+    try {
+      await fetch('/debug-log', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ level, message, stack, context }),
+        keepalive: true,
+      });
+    } catch {}
+  }
+
+  async function captureBucket(bucket) {
+    const win = frameEl.contentWindow;
+    const doc = frameEl.contentDocument;
+    if (!win || !doc) throw new Error('iframe not ready');
+    // Make sure fonts are settled
+    try { if (doc.fonts && doc.fonts.ready) await doc.fonts.ready; } catch {}
+
+    const start = Math.max(0, bucket.range[0]);
+    const wantedH = bucket.range[1] - start;
+    // Clamp to document height to avoid blank space.
+    const docH = Math.max(
+      doc.documentElement.scrollHeight,
+      doc.body ? doc.body.scrollHeight : 0,
+    );
+    const height = Math.min(wantedH, Math.max(1, docH - start));
+
+    // Scroll the iframe so any lazy / on-view rendering settles; html2canvas
+    // uses its own offset logic but scrolling helps trigger intersection observers.
+    try { win.scrollTo(0, start); } catch {}
+    await nextFrame();
+
+    /** @type {any} */
+    const h2c = /** @type {any} */ (window).html2canvas;
+    if (!h2c) throw new Error('html2canvas not loaded');
+
+    // Try a "safe" first pass (scale=1, no transparent bg). Modern CSS like
+    // color-mix() and backdrop-filter can trip html2canvas, but the library
+    // also has an `ignoreElements` hook + an `onclone` we don't need here.
+    const target = doc.body || doc.documentElement;
+    const canvas = await h2c(target, {
+      x: 0,
+      y: start,
+      width: win.innerWidth,
+      height: height,
+      windowWidth: win.innerWidth,
+      windowHeight: win.innerHeight,
+      scale: 1,
+      backgroundColor: '#ffffff',
+      useCORS: true,
+      allowTaint: true,
+      logging: false,
+      foreignObjectRendering: false,
+      imageTimeout: 8000,
+    });
+    return canvas.toDataURL('image/png');
+  }
+
+  async function captureBucketSafe(bucket, idx) {
+    try {
+      return { dataUrl: await captureBucket(bucket), fallback: false };
+    } catch (err) {
+      const msg = err && err.message ? err.message : String(err);
+      const stack = err && err.stack ? String(err.stack) : null;
+      console.error('[viewer] captureBucket failed for bucket ' + idx, err);
+      await logToServer('capture-failed', 'bucket ' + idx + ': ' + msg, stack, {
+        range: bucket.range,
+        commentCount: bucket.comments.length,
+      });
+      return { dataUrl: PLACEHOLDER_PNG, fallback: true };
+    }
+  }
+
+  // ============================================================
+  // SUBMIT
+  // ============================================================
+  async function submitBundle() {
+    if (isSubmitting) return;
+    if (!currentArtifact) return;
+
+    isSubmitting = true;
+    overlayEl.classList.add('is-active');
+    overlayProgressEl.textContent =
+      queue.length === 0 ? 'submitting (no comments)' : 'clustering ' + queue.length + ' comment(s)';
+
+    try {
+      const buckets = clusterByProximity(queue);
+      /** @type {Array<{range:[number,number], comments:any[], dataUrl:string}>} */
+      const captured = [];
+      let fallbackCount = 0;
+
+      for (let i = 0; i < buckets.length; i++) {
+        overlayProgressEl.innerHTML =
+          'capturing region <strong>' + (i + 1) + '</strong> of <strong>' + buckets.length + '</strong>';
+        const result = await captureBucketSafe(buckets[i], i + 1);
+        if (result.fallback) fallbackCount++;
+        captured.push({
+          range: buckets[i].range,
+          comments: buckets[i].comments,
+          dataUrl: result.dataUrl,
+        });
+      }
+
+      overlayProgressEl.textContent = 'sending to agent…';
+
+      const resp = await fetch('/submit', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          artifactId: currentArtifact.id,
+          buckets: captured,
+        }),
+      });
+
+      if (resp.status === 204) {
+        const note = fallbackCount > 0
+          ? ' (' + fallbackCount + ' screenshot(s) used placeholder due to render error — comments still delivered)'
+          : '';
+        showToast('feedback sent — ' + buckets.length + ' region(s)' + note, 'success');
+        // Reset state.
+        currentArtifact = null;
+        queue.length = 0;
+        updateQueueCount();
+        renderPins();
+        titleEl.textContent = 'no artifact';
+        stageEl.classList.remove('is-active');
+        emptyEl.classList.remove('is-hidden');
+        frameEl.src = 'about:blank';
+        setStatus('is-connected', 'idle');
+      } else if (resp.status === 409) {
+        showToast('artifact no longer pending', 'error');
+      } else {
+        const body = await resp.text();
+        showToast('submit failed: ' + (body || resp.status), 'error');
+      }
+    } catch (e) {
+      const msg = e && e.message ? e.message : String(e);
+      const stack = e && e.stack ? String(e.stack) : null;
+      console.error('[viewer] submit error', e);
+      void logToServer('submit-failed', msg, stack);
+      showToast('submit error: ' + msg, 'error');
+    } finally {
+      overlayEl.classList.remove('is-active');
+      isSubmitting = false;
+    }
+  }
+
+  // ============================================================
+  // WEBSOCKET
+  // ============================================================
+  function connectWs() {
+    const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const url = proto + '//' + location.host + '/ws';
+    setStatus('', 'connecting…');
+    const ws = new WebSocket(url);
+    ws.addEventListener('open', () => {
+      wsRetryAttempt = 0;
+      setStatus('is-connected', 'idle');
+    });
+    ws.addEventListener('message', (ev) => {
+      try {
+        const msg = JSON.parse(ev.data);
+        if (msg && msg.type === 'artifact' && typeof msg.id === 'string') {
+          showArtifact(msg);
+        }
+      } catch (e) {
+        console.error('[viewer] bad ws message', e);
+      }
+    });
+    ws.addEventListener('close', () => {
+      setStatus('is-error', 'disconnected');
+      const delay = Math.min(WS_RETRY_MAX, WS_RETRY_BASE * Math.pow(2, wsRetryAttempt++));
+      setTimeout(connectWs, delay);
+    });
+    ws.addEventListener('error', () => {
+      // close handler will schedule reconnect
+    });
+  }
+
+  // ============================================================
+  // BOOT
+  // ============================================================
+  window.addEventListener('resize', renderPins);
+
+  // Catch unhandled errors so we don't fail silently.
+  window.addEventListener('error', (ev) => {
+    void logToServer(
+      'uncaught',
+      ev.message || 'uncaught error',
+      ev.error && ev.error.stack ? ev.error.stack : null,
+      { source: ev.filename, line: ev.lineno, col: ev.colno },
+    );
+  });
+  window.addEventListener('unhandledrejection', (ev) => {
+    const r = ev.reason;
+    const msg = r && r.message ? r.message : String(r);
+    const stack = r && r.stack ? String(r.stack) : null;
+    void logToServer('unhandled-rejection', msg, stack);
+  });
+
+  connectWs();
+})();
+</script>
+</body>
+</html>
