@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "markup": {
+      "command": "npx",
+      "args": ["-y", "tsx", "src/index.ts"]
+    }
+  }
+}
